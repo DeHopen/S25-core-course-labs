@@ -1,0 +1,59 @@
+name: CI Node.js App
+
+on:
+  push:
+    paths:
+      - 'app_js/**'
+  pull_request:
+    paths:
+      - 'app_js/**'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd app_js
+          npm install
+
+      - name: Run Linter (ESLint)
+        run: |
+          cd app_js
+          npm install eslint --no-save
+          npx eslint .
+
+      - name: Run Unit Tests (if defined)
+        run: |
+          cd app_js
+          if [ -f package.json ] && grep -q "\"test\":" package.json; then npm test; else echo "No tests defined"; fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        run: |
+          cd app_js
+          docker build -t your-dockerhub-user/js-app:latest .
+          docker push your-dockerhub-user/js-app:latest
+
+      - name: Snyk Security Scan
+        uses: snyk/actions/docker@master
+        with:
+          image: your-dockerhub-user/js-app:latest
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
