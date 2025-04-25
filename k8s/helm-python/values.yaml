@@ -59,23 +59,15 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
-volumes:
-  - name: config-volume
-    configMap:
-      name: config
-
-volumeClaimTemplates:
-- metadata:
-    name: wesammetadata
-  spec:
-    accessModes: [ "ReadWriteOnce" ]
-    resources:
-      requests:
-        storage: 1Gi
+volumes: []
 
 volumeMounts:
-- name: wesammetadata
-  mountPath: /code/vol
+  - name: "visits"
+    mountPath: "/data"
+volumeClaim:
+  name: "visits"
+  storageSize: 20Mi
+  accessModes: [ "ReadWriteOnce" ]
 
 nodeSelector: {}
 
